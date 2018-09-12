@@ -1,7 +1,6 @@
 import time
 import json
 from flask import Flask, request
-import requests
 
 from .models import Blockchain
 
