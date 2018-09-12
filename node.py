@@ -2,7 +2,7 @@ import time
 import json
 from flask import Flask, request
 
-from .models import Blockchain
+from models import Blockchain
 
 app = Flask(__name__)
 
@@ -49,5 +49,5 @@ def get_pending_tx():
     """Get unconfirmed transactions"""
     return json.dumps(blockchain.unconfirmed_transactions)
 
-
-app.run(debug=True, port=8000)
+if __name__ == '__main__':
+    app.run(debug=True, port=8000)

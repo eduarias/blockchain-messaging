@@ -1,6 +1,10 @@
 from hashlib import sha256
 import json
 import time
+import logging
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Block:
@@ -9,13 +13,25 @@ class Block:
         self.transactions = transactions
         self.timestamp = timestamp
         self.previous_hash = previous_hash
+        logging.debug(f'Block initialize with index({index}), '
+                      f'transactions({transactions}), '
+                      f'timestamp({timestamp}) and '
+                      f'previous hash({previous_hash})')
 
     def compute_hash(self):
         """
        Creates a hash for the block content.
        """
         block_string = json.dumps(self.__dict__, sort_keys=True)
-        return sha256(block_string.encode()).hexdigest()
+        res = sha256(block_string.encode()).hexdigest()
+        logging.debug(f'Block hash computed: {res}')
+        return res
+
+    def __str__(self):
+        return f'index({self.index}) - timestamp({self.timestamp})'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Blockchain:
@@ -26,6 +42,9 @@ class Blockchain:
         self.unconfirmed_transactions = []  # information to insert into the blockchain
         self.chain = []
         self.create_genesis_block()
+        logging.debug(f'New blockchain created: '
+                      f'unconfirmed_transactions({self.unconfirmed_transactions}) and '
+                      f'chain({self.chain})')
 
     def create_genesis_block(self):
         """
@@ -35,8 +54,10 @@ class Blockchain:
         genesis_block = Block(0, [], time.time(), "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block)
+        logging.debug('Genesis block created')
 
-    def proof_of_work(self, block):
+    @staticmethod
+    def proof_of_work(block):
         """
         Tries different values of nonce to get a hash
         that satisfies our difficulty criteria.
@@ -44,10 +65,12 @@ class Blockchain:
         block.nonce = 0
 
         computed_hash = block.compute_hash()
+        logging.debug(f'Calculating PoW: compute hash --> {computed_hash}')
         while not computed_hash.startswith('0' * Blockchain.difficulty):
+            logging.debug(f'Calculating PoW: new compute hash --> {computed_hash}')
             block.nonce += 1
             computed_hash = block.compute_hash()
-
+        logging.debug(f'Calculating PoW: final hash --> {computed_hash}')
         return computed_hash
 
     @property
@@ -70,7 +93,8 @@ class Blockchain:
         self.chain.append(block)
         return True
 
-    def is_valid_proof(self, block, block_hash):
+    @staticmethod
+    def is_valid_proof(block, block_hash):
         """
         Check if the block hash is valid and satisfy thr dificulty criteria.
         """
