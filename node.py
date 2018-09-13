@@ -15,9 +15,11 @@ def new_transaction():
     input_data = request.get_json()
     required_fields = ['author', 'content']
 
+    if not input_data:
+        return 'Invalid transaction data', 400
     for field in required_fields:
         if not input_data.get(field):
-            return 'Invalid transaction data', 404
+            return 'Invalid transaction data', 400
 
     input_data['timestamp'] = time.time()
 
@@ -48,6 +50,7 @@ def mine_unconfirmed_transactions():
 def get_pending_tx():
     """Get unconfirmed transactions"""
     return json.dumps(blockchain.unconfirmed_transactions)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

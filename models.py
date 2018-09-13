@@ -24,7 +24,6 @@ class Block:
        """
         block_string = json.dumps(self.__dict__, sort_keys=True)
         res = sha256(block_string.encode()).hexdigest()
-        logging.debug(f'Block hash computed: {res}')
         return res
 
     def __str__(self):
@@ -65,11 +64,10 @@ class Blockchain:
         block.nonce = 0
 
         computed_hash = block.compute_hash()
-        logging.debug(f'Calculating PoW: compute hash --> {computed_hash}')
         while not computed_hash.startswith('0' * Blockchain.difficulty):
-            logging.debug(f'Calculating PoW: new compute hash --> {computed_hash}')
             block.nonce += 1
             computed_hash = block.compute_hash()
+        logging.debug(f'Calculating PoW: number of calculations required: {block.nonce}')
         logging.debug(f'Calculating PoW: final hash --> {computed_hash}')
         return computed_hash
 
@@ -90,7 +88,9 @@ class Blockchain:
             return False
 
         block.hash = proof
+        logging.debug(f'Add block to chain: block --> {block}')
         self.chain.append(block)
+        logging.debug(f'Add block to chain: chain --> {self.chain}')
         return True
 
     @staticmethod
@@ -102,7 +102,9 @@ class Blockchain:
                 block_hash == block.compute_hash())
 
     def add_new_transaction(self, transaction):
+        logging.debug(f'Add new transaction: {transaction}')
         self.unconfirmed_transactions.append(transaction)
+        logging.debug(f'Current unconfirmed transactions: {len(self.unconfirmed_transactions)}')
 
     def mine(self):
         """
@@ -110,15 +112,15 @@ class Blockchain:
         block and calculating the proof of work.
         """
         if not self.unconfirmed_transactions:
+            logging.debug('Mining: not unconfirmed transactions')
             return False
 
-        last_block = self.last_block
-
-        new_block = Block(index=last_block.index + 1,
+        new_block = Block(index=self.last_block.index + 1,
                           transactions=self.unconfirmed_transactions,
                           timestamp=time.time(),
-                          previous_hash=last_block.hash)
+                          previous_hash=self.last_block.hash)
 
+        logging.debug(f'Mining: New block: {new_block}')
         proof = self.proof_of_work(new_block)
         self.add_block(new_block, proof)
         self.unconfirmed_transactions = []
